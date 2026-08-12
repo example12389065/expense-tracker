@@ -1,19 +1,13 @@
 let expenses =
-    JSON.parse(
-        localStorage.getItem("expenses")
-    ) || [];
-
+    JSON.parse(localStorage.getItem("expenses")) || [];
 
 let budget =
-    Number(
-        localStorage.getItem("budget")
-    ) || 0;
-
+    Number(localStorage.getItem("budget")) || 0;
 
 let editingIndex = -1;
 
 
-/* ELEMENTS */
+// ELEMENTS
 
 const descriptionInput =
     document.getElementById("description");
@@ -55,36 +49,43 @@ const budgetSpent =
     document.getElementById("budgetSpent");
 
 const budgetRemaining =
-    document.getElementById(
-        "budgetRemaining"
-    );
+    document.getElementById("budgetRemaining");
 
 const progressBar =
-    document.getElementById(
-        "progressBar"
-    );
+    document.getElementById("progressBar");
 
 const budgetButton =
-    document.getElementById(
-        "budgetButton"
-    );
+    document.getElementById("budgetButton");
 
 
-/* DATE */
+// GET TODAY'S LOCAL DATE
+// This uses the phone's local date instead of UTC.
 
 function getToday() {
 
-    return new Date()
-        .toISOString()
-        .split("T")[0];
+    const today = new Date();
+
+    const year =
+        today.getFullYear();
+
+    const month =
+        String(today.getMonth() + 1)
+        .padStart(2, "0");
+
+    const day =
+        String(today.getDate())
+        .padStart(2, "0");
+
+    return year + "-" + month + "-" + day;
 }
 
 
-dateInput.value =
-    getToday();
+// Set today's date in the form
+
+dateInput.value = getToday();
 
 
-/* SAVE */
+// SAVE EXPENSES
 
 function saveExpenses() {
 
@@ -95,6 +96,8 @@ function saveExpenses() {
 }
 
 
+// SAVE BUDGET
+
 function saveBudget() {
 
     localStorage.setItem(
@@ -104,7 +107,7 @@ function saveBudget() {
 }
 
 
-/* DASHBOARD */
+// UPDATE DASHBOARD
 
 function updateDashboard() {
 
@@ -113,42 +116,35 @@ function updateDashboard() {
     let todayAmount = 0;
 
 
-    expenses.forEach(
-        function(expense) {
+    expenses.forEach(function(expense) {
 
-            total += expense.amount;
+        total += expense.amount;
 
 
-            if (
-                expense.date ===
-                getToday()
-            ) {
+        // Compare with LOCAL date
 
-                todayAmount +=
-                    expense.amount;
-            }
+        if (expense.date === getToday()) {
 
+            todayAmount += expense.amount;
         }
-    );
+
+    });
 
 
     totalDisplay.textContent =
         "₹" + total;
 
-
     expenseCount.textContent =
         expenses.length;
-
 
     todayTotal.textContent =
         "₹" + todayAmount;
 
 
-    /* BUDGET */
+    // BUDGET
 
     budgetDisplay.textContent =
         "₹" + budget;
-
 
     budgetSpent.textContent =
         "₹" + total;
@@ -166,12 +162,11 @@ function updateDashboard() {
     } else {
 
         budgetRemaining.textContent =
-            "-₹" +
-            Math.abs(remaining);
+            "-₹" + Math.abs(remaining);
     }
 
 
-    /* PROGRESS */
+    // PROGRESS BAR
 
     if (budget > 0) {
 
@@ -196,7 +191,7 @@ function updateDashboard() {
 }
 
 
-/* DISPLAY EXPENSES */
+// DISPLAY EXPENSES
 
 function displayExpenses() {
 
@@ -214,37 +209,27 @@ function displayExpenses() {
 
 
     const filteredExpenses =
-        expenses.filter(
-            function(expense) {
+        expenses.filter(function(expense) {
 
-                const matchesSearch =
-                    expense.description
-                        .toLowerCase()
-                        .includes(
-                            searchText
-                        );
+            const matchesSearch =
+                expense.description
+                    .toLowerCase()
+                    .includes(searchText);
 
 
-                const matchesCategory =
-                    selectedCategory ===
-                    "All" ||
-
-                    expense.category ===
-                    selectedCategory;
+            const matchesCategory =
+                selectedCategory === "All" ||
+                expense.category === selectedCategory;
 
 
-                return (
-                    matchesSearch &&
-                    matchesCategory
-                );
-            }
-        );
+            return (
+                matchesSearch &&
+                matchesCategory
+            );
+        });
 
 
-    if (
-        filteredExpenses.length ===
-        0
-    ) {
+    if (filteredExpenses.length === 0) {
 
         expenseList.innerHTML =
             '<div class="no-expenses">' +
@@ -253,205 +238,171 @@ function displayExpenses() {
     }
 
 
-    filteredExpenses.forEach(
-        function(expense) {
+    filteredExpenses.forEach(function(expense) {
 
-            const realIndex =
-                expenses.indexOf(
-                    expense
+        const realIndex =
+            expenses.indexOf(expense);
+
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "expense-item";
+
+
+        const top =
+            document.createElement("div");
+
+        top.className =
+            "expense-top";
+
+
+        const name =
+            document.createElement("div");
+
+        name.className =
+            "expense-name";
+
+        name.textContent =
+            expense.description;
+
+
+        const amount =
+            document.createElement("div");
+
+        amount.className =
+            "expense-amount";
+
+        amount.textContent =
+            "₹" + expense.amount;
+
+
+        top.appendChild(name);
+        top.appendChild(amount);
+
+
+        const details =
+            document.createElement("div");
+
+        details.className =
+            "expense-details";
+
+        details.textContent =
+            expense.category +
+            " • " +
+            expense.date;
+
+
+        const actions =
+            document.createElement("div");
+
+        actions.className =
+            "actions";
+
+
+        // EDIT
+
+        const editButton =
+            document.createElement("button");
+
+        editButton.className =
+            "edit-button";
+
+        editButton.textContent =
+            "Edit";
+
+
+        editButton.addEventListener(
+            "click",
+            function() {
+
+                descriptionInput.value =
+                    expense.description;
+
+                amountInput.value =
+                    expense.amount;
+
+                categoryInput.value =
+                    expense.category;
+
+                dateInput.value =
+                    expense.date;
+
+                editingIndex =
+                    realIndex;
+
+                addButton.textContent =
+                    "Update Expense";
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+            }
+        );
+
+
+        // DELETE
+
+        const deleteButton =
+            document.createElement("button");
+
+        deleteButton.className =
+            "delete-button";
+
+        deleteButton.textContent =
+            "Delete";
+
+
+        deleteButton.addEventListener(
+            "click",
+            function() {
+
+                expenses.splice(
+                    realIndex,
+                    1
                 );
 
+                saveExpenses();
 
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-            item.className =
-                "expense-item";
+                displayExpenses();
+            }
+        );
 
 
-            const top =
-                document.createElement(
-                    "div"
-                );
+        actions.appendChild(editButton);
 
-            top.className =
-                "expense-top";
+        actions.appendChild(deleteButton);
 
 
-            const name =
-                document.createElement(
-                    "div"
-                );
+        item.appendChild(top);
 
-            name.className =
-                "expense-name";
+        item.appendChild(details);
 
-            name.textContent =
-                expense.description;
+        item.appendChild(actions);
 
 
-            const amount =
-                document.createElement(
-                    "div"
-                );
+        expenseList.appendChild(item);
 
-            amount.className =
-                "expense-amount";
-
-            amount.textContent =
-                "₹" + expense.amount;
-
-
-            top.appendChild(name);
-
-            top.appendChild(amount);
-
-
-            const details =
-                document.createElement(
-                    "div"
-                );
-
-            details.className =
-                "expense-details";
-
-            details.textContent =
-                expense.category +
-                " • " +
-                expense.date;
-
-
-            const actions =
-                document.createElement(
-                    "div"
-                );
-
-            actions.className =
-                "actions";
-
-
-            /* EDIT */
-
-            const editButton =
-                document.createElement(
-                    "button"
-                );
-
-            editButton.className =
-                "edit-button";
-
-            editButton.textContent =
-                "Edit";
-
-
-            editButton.addEventListener(
-                "click",
-                function() {
-
-                    descriptionInput.value =
-                        expense.description;
-
-                    amountInput.value =
-                        expense.amount;
-
-                    categoryInput.value =
-                        expense.category;
-
-                    dateInput.value =
-                        expense.date;
-
-
-                    editingIndex =
-                        realIndex;
-
-
-                    addButton.textContent =
-                        "Update Expense";
-
-
-                    window.scrollTo({
-                        top: 0,
-                        behavior: "smooth"
-                    });
-                }
-            );
-
-
-            /* DELETE */
-
-            const deleteButton =
-                document.createElement(
-                    "button"
-                );
-
-            deleteButton.className =
-                "delete-button";
-
-            deleteButton.textContent =
-                "Delete";
-
-
-            deleteButton.addEventListener(
-                "click",
-                function() {
-
-                    expenses.splice(
-                        realIndex,
-                        1
-                    );
-
-
-                    saveExpenses();
-
-                    displayExpenses();
-
-                    updateDashboard();
-                }
-            );
-
-
-            actions.appendChild(
-                editButton
-            );
-
-            actions.appendChild(
-                deleteButton
-            );
-
-
-            item.appendChild(top);
-
-            item.appendChild(details);
-
-            item.appendChild(actions);
-
-
-            expenseList.appendChild(item);
-
-        }
-    );
+    });
 
 
     updateDashboard();
 }
 
 
-/* ADD / UPDATE */
+// ADD / UPDATE EXPENSE
 
 addButton.addEventListener(
     "click",
     function() {
 
         const description =
-            descriptionInput.value
-                .trim();
+            descriptionInput.value.trim();
 
         const amount =
-            Number(
-                amountInput.value
-            );
+            Number(amountInput.value);
 
         const category =
             categoryInput.value;
@@ -474,9 +425,9 @@ addButton.addEventListener(
         }
 
 
-        if (
-            editingIndex === -1
-        ) {
+        if (editingIndex === -1) {
+
+            // ADD NEW EXPENSE
 
             expenses.push({
 
@@ -495,9 +446,9 @@ addButton.addEventListener(
 
         } else {
 
-            expenses[
-                editingIndex
-            ] = {
+            // UPDATE EXPENSE
+
+            expenses[editingIndex] = {
 
                 description:
                     description,
@@ -514,7 +465,6 @@ addButton.addEventListener(
 
 
             editingIndex = -1;
-
 
             addButton.textContent =
                 "Add Expense";
@@ -542,7 +492,7 @@ addButton.addEventListener(
 );
 
 
-/* SEARCH */
+// SEARCH
 
 searchInput.addEventListener(
     "input",
@@ -553,7 +503,7 @@ searchInput.addEventListener(
 );
 
 
-/* FILTER */
+// CATEGORY FILTER
 
 filterCategory.addEventListener(
     "change",
@@ -564,7 +514,7 @@ filterCategory.addEventListener(
 );
 
 
-/* SET BUDGET */
+// SET BUDGET
 
 budgetButton.addEventListener(
     "click",
@@ -576,9 +526,7 @@ budgetButton.addEventListener(
             );
 
 
-        if (
-            newBudget === null
-        ) {
+        if (newBudget === null) {
 
             return;
         }
@@ -610,7 +558,7 @@ budgetButton.addEventListener(
 );
 
 
-/* START */
+// START APP
 
 displayExpenses();
 
